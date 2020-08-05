@@ -172,7 +172,7 @@ contract('votebox', accounts => {
 
             it("out of time range", async () => {
                 try {
-                    await voteBox.vote(1, 0, { from: u2 });
+                    await voteBox.vote(1, 1, { from: u2 });
                     throw null;
                 } catch (error) {
                     assert.ok(error.message.includes("< begin"), error);
@@ -184,7 +184,7 @@ contract('votebox', accounts => {
                 }
 
                 try {
-                    await voteBox.vote(0, 0, { from: u2 });
+                    await voteBox.vote(0, 1, { from: u2 });
                     throw null;
                 } catch (error) {
                     assert.ok(error.message.includes("> end"), error);
