@@ -69,8 +69,8 @@ contract VoteBox {
     {
         require(mcb.balanceOf(msg.sender) >= MIN_PROPOSAL_MCB, "proposal privilege required");
         require(bytes(link).length > 0, "empty link");
-        require(beginBlock >= block.number, "beginBlock < block.number");
-        require(beginBlock.add(MIN_PERIOD) <= endBlock, "beginBlock + MIN_PERIOD > endBlock");
+        require(block.number <= beginBlock, "old proposal");
+        require(beginBlock.add(MIN_PERIOD) <= endBlock, "period is too short");
         proposals.push(Meta({
             link: link,
             beginBlock: beginBlock,
