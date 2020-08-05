@@ -89,8 +89,8 @@ contract VoteBox {
         external
     {
         require(id < totalProposals, "invalid id");
-        require(block.number <= proposals[id].beginBlock, "< begin");
-        require(proposals[id].endBlock <= block.number, "> end");
+        require(proposals[id].beginBlock <= block.number, "< begin");
+        require(block.number <= proposals[id].endBlock, "> end");
         votes[id][msg.sender] = voteContent;
         emit Vote(msg.sender, id, voteContent);
     }

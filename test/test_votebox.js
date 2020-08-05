@@ -4,7 +4,8 @@ const {
     toWad,
     fromWad,
     createEVMSnapshot,
-    restoreEVMSnapshot
+    restoreEVMSnapshot,
+    increaseEvmBlock
 } = require('./funcs');
 
 const TestToken = artifacts.require('test/TestToken.sol');
@@ -30,7 +31,7 @@ contract('votebox', accounts => {
 
     async function defaultActiveBlock() {
         const beginBlock = 1 /* next block */ + (await web3.eth.getBlockNumber());
-        const endBlock = beginBlock + 172800; // 30 day for 15s/block
+        const endBlock = beginBlock + 6336; // 1.1 days for 15s/block
         return { beginBlock, endBlock };
     }
 
@@ -41,7 +42,7 @@ contract('votebox', accounts => {
                 await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
                 throw null;
             } catch (error) {
-                assert.ok(error.message.includes("proposal privilege required"));
+                assert.ok(error.message.includes("proposal privilege required"), error);
             }  
         });
 
@@ -52,7 +53,7 @@ contract('votebox', accounts => {
                 await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
                 throw null;
             } catch (error) {
-                assert.ok(error.message.includes("proposal privilege required"));
+                assert.ok(error.message.includes("proposal privilege required"), error);
             }  
         });
 
@@ -86,7 +87,7 @@ contract('votebox', accounts => {
                     await voteBox.propose("", beginBlock, endBlock, { from: u1 });
                     throw null;
                 } catch (error) {
-                    assert.ok(error.message.includes("empty link"));
+                    assert.ok(error.message.includes("empty link"), error);
                 }
             });
 
@@ -96,14 +97,14 @@ contract('votebox', accounts => {
                     await voteBox.propose("https://", beginBlock - 1, endBlock, { from: u1 });
                     throw null;
                 } catch (error) {
-                    assert.ok(error.message.includes("old proposal"));
+                    assert.ok(error.message.includes("old proposal"), error);
                 }
                 try {
                     const { beginBlock } = await defaultActiveBlock();
                     await voteBox.propose("https://", beginBlock, beginBlock, { from: u1 });
                     throw null;
                 } catch (error) {
-                    assert.ok(error.message.includes("period is too short"));
+                    assert.ok(error.message.includes("period is too short"), error);
                 }
             });
         }); // with with proposal privilege
@@ -115,14 +116,51 @@ contract('votebox', accounts => {
                 await voteBox.vote(0, 0);
                 throw null;
             } catch (error) {
-                assert.ok(error.message.includes("invalid id"));
+                assert.ok(error.message.includes("invalid id"), error);
             }
         });
 
-    // describe("create proposal", async () => {
-    //     it("indexPrice", async () => {
-// invalid data
-// out of time
-    //     });
+        describe("proposal created", async () => {
+            beforeEach(async () => {
+                await mcb.mint(u1, toWad('20000'));
+                const { beginBlock, endBlock } = await defaultActiveBlock();
+                await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
+                await voteBox.propose("https://", beginBlock + 1000, endBlock + 1000, { from: u1 });
+            });
+
+            it("normal votes", async () => {
+                
+            });
+
+            it("invalid vote data", async () => {
+                try {
+                    await voteBox.vote(0, 2);
+                    throw null;
+                } catch (error) {
+                    assert.ok(error.message.includes("invalid opcode"), error);
+                }
+            });
+
+            it("out of time range", async () => {
+                try {
+                    await voteBox.vote(1, 0);
+                    throw null;
+                } catch (error) {
+                    assert.ok(error.message.includes("< begin"), error);
+                }
+
+                // skip 1.1 days for 15s/block
+                for (let i = 0; i < 6336; i++) {
+                    await increaseEvmBlock();
+                }
+
+                try {
+                    await voteBox.vote(0, 0);
+                    throw null;
+                } catch (error) {
+                    assert.ok(error.message.includes("> end"), error);
+                }
+            });
+        }); // proposal created
     }); // vote
 });
