@@ -19,15 +19,15 @@ active time: [begin block, end block] for voting
 The smart contract has the following public functions:
 
 ```
-propose(link, begin, end): create a new proposal, need a proposal privilege
-vote(id, for/against): vote for/against the proposal with id
+propose(link, begin, end): Create a new proposal, need a proposal privilege
+vote(id, for/against): Vote for/against the proposal with id
 ```
 
 The smart contract has the following events:
 
 ```
-Proposal(id, link, begin, end): the new proposal is created.
-Vote(address, id, for): someone changes his vote on the proposal.
+Proposal(id, link, begin, end): The new proposal is created.
+Vote(address, id, for): Someone changes his/her vote on the proposal.
 ```
 
 The backend system can use the events to trace the voting.
