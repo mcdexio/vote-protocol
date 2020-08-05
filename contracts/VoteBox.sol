@@ -18,7 +18,7 @@ contract VoteBox {
     }
 
     // Vote content
-    enum Content { FOR, AGAINST }
+    enum Content { INVALID, FOR, AGAINST }
 
     // Min MCB for creating a new proposal
     uint256 public constant MIN_PROPOSAL_MCB = 20000 * 10**18;
@@ -89,6 +89,7 @@ contract VoteBox {
         external
     {
         require(id < totalProposals, "invalid id");
+        require(voteContent != Content.INVALID, "invalid content");
         require(proposals[id].beginBlock <= block.number, "< begin");
         require(block.number <= proposals[id].endBlock, "> end");
         votes[id][msg.sender] = voteContent;

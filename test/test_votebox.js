@@ -113,7 +113,7 @@ contract('votebox', accounts => {
     describe("vote", async () => {
         it("vote before create", async () => {
             try {
-                await voteBox.vote(0, 0);
+                await voteBox.vote(0, 0, { from: u2 });
                 throw null;
             } catch (error) {
                 assert.ok(error.message.includes("invalid id"), error);
@@ -125,16 +125,45 @@ contract('votebox', accounts => {
                 await mcb.mint(u1, toWad('20000'));
                 const { beginBlock, endBlock } = await defaultActiveBlock();
                 await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
-                await voteBox.propose("https://", beginBlock + 1000, endBlock + 1000, { from: u1 });
+                await voteBox.propose("https://", beginBlock + 20, endBlock + 20, { from: u1 });
             });
 
             it("normal votes", async () => {
+                // enable both proposals
+                for (let i = 0; i < 20; i++) {
+                    await increaseEvmBlock();
+                }
+                assert(await voteBox.votes(0, u1), 0)
+                assert(await voteBox.votes(0, u2), 0)
+                assert(await voteBox.votes(0, u3), 0)
+                assert(await voteBox.votes(1, u1), 0)
+                assert(await voteBox.votes(1, u2), 0)
+                assert(await voteBox.votes(1, u3), 0)
                 
+                // set
+                await voteBox.vote(0, 1, { from: u1 });
+                await voteBox.vote(0, 2, { from: u2 });
+                await voteBox.vote(1, 2, { from: u3 });
+                assert(await voteBox.votes(0, u1), 1);
+                assert(await voteBox.votes(0, u2), 2);
+                assert(await voteBox.votes(1, u3), 2);
+
+                // overwrite
+                await voteBox.vote(0, 1, { from: u2 });
+                assert(await voteBox.votes(0, u1), 1);
+                assert(await voteBox.votes(0, u2), 1);
+                assert(await voteBox.votes(1, u3), 2);
             });
 
             it("invalid vote data", async () => {
                 try {
-                    await voteBox.vote(0, 2);
+                    await voteBox.vote(0, 0, { from: u2 });
+                    throw null;
+                } catch (error) {
+                    assert.ok(error.message.includes("invalid content"), error);
+                }
+                try {
+                    await voteBox.vote(0, 3, { from: u2 });
                     throw null;
                 } catch (error) {
                     assert.ok(error.message.includes("invalid opcode"), error);
@@ -143,7 +172,7 @@ contract('votebox', accounts => {
 
             it("out of time range", async () => {
                 try {
-                    await voteBox.vote(1, 0);
+                    await voteBox.vote(1, 0, { from: u2 });
                     throw null;
                 } catch (error) {
                     assert.ok(error.message.includes("< begin"), error);
@@ -155,7 +184,7 @@ contract('votebox', accounts => {
                 }
 
                 try {
-                    await voteBox.vote(0, 0);
+                    await voteBox.vote(0, 0, { from: u2 });
                     throw null;
                 } catch (error) {
                     assert.ok(error.message.includes("> end"), error);
