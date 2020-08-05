@@ -67,8 +67,8 @@ contract VoteBox {
     function propose(string calldata link, uint256 beginBlock, uint256 endBlock)
         external
     {
-        require(mcb.balanceOf(msg.sender) >= MIN_PROPOSAL_MCB, "Proposal privilege required");
-        require(bytes(link).length > 0, "Empty link");
+        require(mcb.balanceOf(msg.sender) >= MIN_PROPOSAL_MCB, "proposal privilege required");
+        require(bytes(link).length > 0, "empty link");
         require(beginBlock >= block.number, "beginBlock < block.number");
         require(beginBlock.add(MIN_PERIOD) <= endBlock, "beginBlock + MIN_PERIOD > endBlock");
         proposals.push(Meta({
@@ -88,7 +88,7 @@ contract VoteBox {
     function vote(uint256 id, Content voteContent)
         external
     {
-        require(id < totalProposals, "Invalid id");
+        require(id < totalProposals, "invalid id");
         require(block.number <= proposals[id].beginBlock, "< begin");
         require(proposals[id].endBlock <= block.number, "> end");
         votes[id][msg.sender] = voteContent;
