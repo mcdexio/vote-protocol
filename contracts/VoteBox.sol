@@ -21,7 +21,7 @@ contract VoteBox {
     enum Content { INVALID, FOR, AGAINST }
 
     // Min MCB for creating a new proposal
-    uint256 public constant MIN_PROPOSAL_MCB = 20000 * 10**18;
+    uint256 public constant MIN_PROPOSAL_MCB = 1000000 * 10**18; // 1% of MCB
 
     // Min voting period in blocks. 1 day for 15s/block
     uint256 public constant MIN_PERIOD = 5760;
