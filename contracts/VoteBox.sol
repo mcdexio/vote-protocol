@@ -56,7 +56,7 @@ contract VoteBox {
     }
 
     /**
-     * @dev    Accessor to the total number or proposal
+     * @dev    Accessor to the total number of proposal
      */
     function totalProposals()
         external view returns (uint256)
