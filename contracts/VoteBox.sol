@@ -29,9 +29,6 @@ contract VoteBox {
     // MCB address
     IERC20 public mcb;
 
-    // Number of proposals
-    uint256 public totalProposals;
-
     // All proposal meta data
     Meta[] public proposals;
 
@@ -59,6 +56,15 @@ contract VoteBox {
     }
 
     /**
+     * @dev    Accessor to the total number or proposal
+     */
+    function totalProposals()
+        external view returns (uint256)
+    {
+        return proposals.length;
+    }
+
+    /**
      * @dev    Create a new proposal, need a proposal privilege
      * @param  link       The forum link of the proposal
      * @param  beginBlock Voting is enabled between [begin block, end block]
@@ -76,8 +82,7 @@ contract VoteBox {
             beginBlock: beginBlock,
             endBlock: endBlock
         }));
-        emit Proposal(totalProposals, link, beginBlock, endBlock);
-        totalProposals++;
+        emit Proposal(proposals.length - 1, link, beginBlock, endBlock);
     }
 
     /**
@@ -88,7 +93,7 @@ contract VoteBox {
     function vote(uint256 id, Content voteContent)
         external
     {
-        require(id < totalProposals, "invalid id");
+        require(id < proposals.length, "invalid id");
         require(voteContent != Content.INVALID, "invalid content");
         require(proposals[id].beginBlock <= block.number, "< begin");
         require(block.number <= proposals[id].endBlock, "> end");
