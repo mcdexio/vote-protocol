@@ -47,7 +47,7 @@ contract('votebox', accounts => {
         });
 
         it("insufficient mcb", async () => {
-            await mcb.mint(u1, '19999' + '999999999999999999');
+            await mcb.mint(u1, '999999' + '999999999999999999');
             try {
                 const { beginBlock, endBlock } = await defaultActiveBlock();
                 await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
@@ -59,26 +59,38 @@ contract('votebox', accounts => {
 
         describe("with proposal privilege", async () => {
             beforeEach(async () => {
-                await mcb.mint(u1, toWad('20000'));
+                await mcb.mint(u1, toWad('1000000'));
             });
         
             it("normal", async () => {
                 const { beginBlock, endBlock } = await defaultActiveBlock();
                 assert.equal(await voteBox.totalProposals(), 0);
 
-                await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
+                const log1 = await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
                 assert.equal(await voteBox.totalProposals(), 1);
                 const meta0 = await voteBox.proposals(0);
                 assert.equal(meta0.link, "https://");
                 assert.equal(meta0.beginBlock, beginBlock);
                 assert.equal(meta0.endBlock, endBlock);
+                assert.equal(log1.logs.length, 1);
+                assert.equal(log1.logs[0].event, 'Proposal');
+                assert.equal(log1.logs[0].args.id, 0);
+                assert.equal(log1.logs[0].args.link, "https://");
+                assert.equal(log1.logs[0].args.beginBlock, beginBlock);
+                assert.equal(log1.logs[0].args.endBlock, endBlock);
 
-                await voteBox.propose("https://", beginBlock + 1, endBlock, { from: u1 });
+                const log2 = await voteBox.propose("https://", beginBlock + 1, endBlock, { from: u1 });
                 assert.equal(await voteBox.totalProposals(), 2);
                 const meta1 = await voteBox.proposals(1);
                 assert.equal(meta1.link, "https://");
                 assert.equal(meta1.beginBlock, beginBlock + 1);
                 assert.equal(meta1.endBlock, endBlock);
+                assert.equal(log2.logs.length, 1);
+                assert.equal(log2.logs[0].event, 'Proposal');
+                assert.equal(log2.logs[0].args.id, 1);
+                assert.equal(log2.logs[0].args.link, "https://");
+                assert.equal(log2.logs[0].args.beginBlock, beginBlock + 1);
+                assert.equal(log2.logs[0].args.endBlock, endBlock);
             });
 
             it("wrong link", async () => {
@@ -122,7 +134,7 @@ contract('votebox', accounts => {
 
         describe("proposal created", async () => {
             beforeEach(async () => {
-                await mcb.mint(u1, toWad('20000'));
+                await mcb.mint(u1, toWad('1000000'));
                 const { beginBlock, endBlock } = await defaultActiveBlock();
                 await voteBox.propose("https://", beginBlock, endBlock, { from: u1 });
                 await voteBox.propose("https://", beginBlock + 20, endBlock + 20, { from: u1 });
@@ -133,26 +145,36 @@ contract('votebox', accounts => {
                 for (let i = 0; i < 20; i++) {
                     await increaseEvmBlock();
                 }
-                assert(await voteBox.votes(0, u1), 0)
-                assert(await voteBox.votes(0, u2), 0)
-                assert(await voteBox.votes(0, u3), 0)
-                assert(await voteBox.votes(1, u1), 0)
-                assert(await voteBox.votes(1, u2), 0)
-                assert(await voteBox.votes(1, u3), 0)
                 
                 // set
-                await voteBox.vote(0, 1, { from: u1 });
-                await voteBox.vote(0, 2, { from: u2 });
-                await voteBox.vote(1, 2, { from: u3 });
-                assert(await voteBox.votes(0, u1), 1);
-                assert(await voteBox.votes(0, u2), 2);
-                assert(await voteBox.votes(1, u3), 2);
+                const log1 = await voteBox.vote(0, 1, { from: u1 });
+                assert.equal(log1.logs.length, 1);
+                assert.equal(log1.logs[0].event, 'Vote');
+                assert.equal(log1.logs[0].args.voter, u1);
+                assert.equal(log1.logs[0].args.id, 0);
+                assert.equal(log1.logs[0].args.voteContent, 1);
+
+                const log2 = await voteBox.vote(0, 2, { from: u2 });
+                assert.equal(log2.logs.length, 1);
+                assert.equal(log2.logs[0].event, 'Vote');
+                assert.equal(log2.logs[0].args.voter, u2);
+                assert.equal(log2.logs[0].args.id, 0);
+                assert.equal(log2.logs[0].args.voteContent, 2);
+
+                const log3 = await voteBox.vote(1, 2, { from: u3 });
+                assert.equal(log3.logs.length, 1);
+                assert.equal(log3.logs[0].event, 'Vote');
+                assert.equal(log3.logs[0].args.voter, u3);
+                assert.equal(log3.logs[0].args.id, 1);
+                assert.equal(log3.logs[0].args.voteContent, 2);
 
                 // overwrite
-                await voteBox.vote(0, 1, { from: u2 });
-                assert(await voteBox.votes(0, u1), 1);
-                assert(await voteBox.votes(0, u2), 1);
-                assert(await voteBox.votes(1, u3), 2);
+                const log4 = await voteBox.vote(0, 1, { from: u2 });
+                assert.equal(log4.logs.length, 1);
+                assert.equal(log4.logs[0].event, 'Vote');
+                assert.equal(log4.logs[0].args.voter, u2);
+                assert.equal(log4.logs[0].args.id, 0);
+                assert.equal(log4.logs[0].args.voteContent, 1);
             });
 
             it("invalid vote data", async () => {

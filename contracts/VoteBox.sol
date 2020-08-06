@@ -32,9 +32,6 @@ contract VoteBox {
     // All proposal meta data
     Meta[] public proposals;
 
-    // All proposal vote content
-    mapping (uint256 => mapping (address => Content)) public votes;
-
     /**
      * @dev The new proposal is created
      */
@@ -97,7 +94,6 @@ contract VoteBox {
         require(voteContent != Content.INVALID, "invalid content");
         require(proposals[id].beginBlock <= block.number, "< begin");
         require(block.number <= proposals[id].endBlock, "> end");
-        votes[id][msg.sender] = voteContent;
         emit Vote(msg.sender, id, voteContent);
     }
 }
